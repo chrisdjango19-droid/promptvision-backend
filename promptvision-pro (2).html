@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptVision Pro — Prompts IA pour Images Professionnelles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C96A;
+    --gold-dim: #8A6B2A;
+    --black: #080808;
+    --dark: #0E0E0E;
+    --card: #141414;
+    --card2: #1A1A1A;
+    --border: #2A2A2A;
+    --text: #E8E4DC;
+    --muted: #6B6560;
+    --white: #F5F2EC;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CURSOR */
+  .cursor {
+    position: fixed; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--gold); pointer-events: none; z-index: 9999;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    position: fixed; width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--gold-dim); pointer-events: none; z-index: 9998;
+    transition: transform 0.35s cubic-bezier(.23,1,.32,1);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.4rem 3rem;
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--gold);
+  }
+  .logo span { color: var(--white); font-style: italic; }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    color: var(--muted); font-size: 0.82rem; letter-spacing: 0.12em;
+    text-transform: uppercase; text-decoration: none;
+    transition: color 0.25s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta {
+    background: var(--gold); color: var(--black);
+    padding: 0.6rem 1.5rem; font-size: 0.8rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: background 0.2s, transform 0.2s;
+  }
+  .nav-cta:hover { background: var(--gold-light); transform: scale(1.03); }
+
+  /* HERO — TUNNEL */
+  #tunnel {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; padding: 8rem 2rem 4rem;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 30%, #1A1200 0%, var(--black) 70%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px; opacity: 0.25;
+  }
+  .hero-glow {
+    position: absolute; top: -20%; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 400px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .tunnel-content {
+    position: relative; z-index: 2; text-align: center; max-width: 800px;
+  }
+
+  .badge {
+    display: inline-block; padding: 0.4rem 1.2rem;
+    border: 1px solid var(--gold-dim); color: var(--gold);
+    font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 300; line-height: 1.05;
+    color: var(--white); margin-bottom: 1rem;
+    animation: fadeDown 0.9s ease 0.1s both;
+  }
+  .hero-title em { color: var(--gold); font-style: italic; }
+  .hero-title strong { font-weight: 600; }
+
+  .hero-sub {
+    font-size: 1.1rem; color: var(--muted); font-weight: 400;
+    max-width: 560px; margin: 0 auto 3rem;
+    line-height: 1.7;
+    animation: fadeDown 1s ease 0.2s both;
+  }
+
+  /* URGENCY BAR */
+  .urgency-bar {
+    background: linear-gradient(135deg, #1A0D00, #2A1800);
+    border: 1px solid var(--gold-dim);
+    padding: 0.9rem 2rem; margin-bottom: 2.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 1rem;
+    animation: fadeDown 1s ease 0.25s both;
+  }
+  .urgency-dot { width: 8px; height: 8px; border-radius: 50%; background: #FF4444; animation: pulse 1.5s infinite; }
+  .urgency-text { font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; color: var(--gold); }
+  .urgency-text strong { color: var(--white); }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+
+  /* FUNNEL BOX */
+  .funnel-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 3rem; max-width: 560px; margin: 0 auto;
+    position: relative; overflow: hidden;
+    animation: fadeUp 1s ease 0.35s both;
+  }
+  .funnel-box::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .funnel-price {
+    display: flex; align-items: baseline; justify-content: center; gap: 0.8rem;
+    margin-bottom: 2rem;
+  }
+  .price-old { font-size: 1.2rem; color: var(--muted); text-decoration: line-through; }
+  .price-new { font-family: 'Cormorant Garamond', serif; font-size: 4rem; color: var(--gold); font-weight: 300; }
+  .price-unit { font-size: 0.85rem; color: var(--muted); }
+
+  .funnel-features {
+    list-style: none; margin-bottom: 2rem; text-align: left;
+  }
+  .funnel-features li {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.6rem 0; border-bottom: 1px solid var(--border);
+    font-size: 0.92rem; color: var(--text);
+  }
+  .funnel-features li:last-child { border-bottom: none; }
+  .check { color: var(--gold); font-size: 1rem; flex-shrink: 0; }
+
+  /* EMAIL FORM */
+  .funnel-form { display: flex; flex-direction: column; gap: 1rem; }
+  .funnel-form input {
+    background: var(--dark); border: 1px solid var(--border);
+    color: var(--white); padding: 1rem 1.2rem;
+    font-family: 'Syne', sans-serif; font-size: 0.9rem;
+    outline: none; transition: border-color 0.2s;
+    width: 100%;
+  }
+  .funnel-form input:focus { border-color: var(--gold); }
+  .funnel-form input::placeholder { color: var(--muted); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--black); padding: 1.1rem 2rem;
+    font-family: 'Syne', sans-serif; font-size: 0.88rem;
+    font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    border: none; cursor: pointer; width: 100%;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: transform 0.2s, filter 0.2s; position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    transform: translateX(-100%); transition: transform 0.5s;
+  }
+  .btn-primary:hover { transform: scale(1.02); filter: brightness(1.1); }
+  .btn-primary:hover::after { transform: translateX(100%); }
+
+  .funnel-trust {
+    display: flex; align-items: center; justify-content: center; gap: 1rem;
+    margin-top: 1rem; font-size: 0.75rem; color: var(--muted);
+  }
+  .funnel-trust span { display: flex; align-items: center; gap: 0.3rem; }
+
+  /* PROMPT PREVIEW */
+  .prompt-preview-section {
+    padding: 6rem 2rem; position: relative;
+    background: linear-gradient(180deg, var(--black), var(--dark));
+  }
+  .section-label {
+    text-align: center; font-size: 0.72rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--gold);
+    font-family: 'JetBrains Mono', monospace; margin-bottom: 1rem;
+  }
+  .section-title {
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 4vw, 3.5rem); font-weight: 300;
+    color: var(--white); margin-bottom: 1rem;
+  }
+  .section-title em { color: var(--gold); font-style: italic; }
+  .section-sub {
+    text-align: center; color: var(--muted); font-size: 0.95rem;
+    max-width: 520px; margin: 0 auto 4rem; line-height: 1.7;
+  }
+
+  .prompt-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem; max-width: 1100px; margin: 0 auto;
+  }
+
+  .prompt-card {
+    background: var(--card); border: 1px solid var(--border);
+    overflow: hidden; transition: border-color 0.3s, transform 0.3s;
+    position: relative;
+  }
+  .prompt-card:hover { border-color: var(--gold-dim); transform: translateY(-4px); }
+
+  .prompt-image {
+    width: 100%; height: 220px; object-fit: cover;
+    background: linear-gradient(135deg, #1A1200, #0A0A15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; color: var(--muted); position: relative; overflow: hidden;
+  }
+
+  /* Fake beautiful images with CSS */
+  .img-1 { background: linear-gradient(135deg, #0D1B2A 0%, #1B3A5A 40%, #C9A84C22 100%); }
+  .img-2 { background: linear-gradient(135deg, #1A0A0A 0%, #4A1A1A 40%, #C9A84C11 100%); }
+  .img-3 { background: linear-gradient(135deg, #0A0D1A 0%, #1A2040 40%, #7A5AFF11 100%); }
+  .img-4 { background: linear-gradient(135deg, #0A1A0A 0%, #1A3A1A 40%, #5AFF5A11 100%); }
+  .img-5 { background: linear-gradient(135deg, #1A1A0A 0%, #3A3A0A 40%, #FFFF5A11 100%); }
+  .img-6 { background: linear-gradient(135deg, #1A0A1A 0%, #3A0A3A 40%, #FF5AFF11 100%); }
+
+  .img-placeholder {
+    width: 100%; height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 0.5rem;
+    color: var(--muted); font-size: 0.72rem; letter-spacing: 0.1em;
+    text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+  }
+  .img-placeholder .img-icon { font-size: 2.5rem; margin-bottom: 0.3rem; opacity: 0.4; }
+  .img-label {
+    position: absolute; bottom: 0.8rem; left: 0.8rem;
+    background: rgba(8,8,8,0.85); border: 1px solid var(--border);
+    padding: 0.25rem 0.7rem; font-size: 0.7rem; color: var(--gold);
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;
+  }
+
+  .prompt-body { padding: 1.5rem; }
+  .prompt-style {
+    font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gold); font-family: 'JetBrains Mono', monospace; margin-bottom: 0.6rem;
+  }
+  .prompt-name {
+    font-size: 1.05rem; font-weight: 600; color: var(--white); margin-bottom: 1rem;
+  }
+
+  /* BLURRED PROMPT TEXT */
+  .prompt-text-wrap { position: relative; margin-bottom: 1.2rem; }
+  .prompt-text {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.73rem;
+    color: var(--muted); line-height: 1.7; padding: 0.8rem;
+    background: var(--dark); border: 1px solid var(--border);
+  }
+  .prompt-visible { color: var(--text); }
+  .prompt-blurred {
+    filter: blur(5px); user-select: none; pointer-events: none;
+    color: var(--text); position: relative;
+  }
+  .prompt-lock {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 60%;
+    background: linear-gradient(180deg, transparent, var(--card));
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 0.8rem;
+  }
+  .lock-btn {
+    background: var(--gold); color: var(--black);
+    padding: 0.4rem 1rem; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; border: none;
+    cursor: pointer; font-family: 'Syne', sans-serif;
+    transition: background 0.2s;
+  }
+  .lock-btn:hover { background: var(--gold-light); }
+
+  .compat-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .tag {
+    font-size: 0.65rem; padding: 0.2rem 0.6rem; border: 1px solid var(--border);
+    color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* SOCIAL PROOF */
+  .proof-section {
+    padding: 5rem 2rem; background: var(--dark);
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .proof-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 2rem; max-width: 900px; margin: 0 auto 4rem;
+    text-align: center;
+  }
+  .proof-stat .number {
+    font-family: 'Cormorant Garamond', serif; font-size: 3.5rem;
+    color: var(--gold); font-weight: 300; line-height: 1;
+  }
+  .proof-stat .label { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.4rem; }
+
+  .testimonials { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+  .testimonial {
+    background: var(--card); border: 1px solid var(--border); padding: 2rem;
+    position: relative; transition: border-color 0.3s;
+  }
+  .testimonial:hover { border-color: var(--gold-dim); }
+  .testimonial::before { content: '"'; position: absolute; top: 0.8rem; left: 1.2rem; font-family: 'Cormorant Garamond', serif; font-size: 4rem; color: var(--gold-dim); line-height: 1; }
+  .t-text { font-size: 0.9rem; line-height: 1.7; color: var(--text); margin-bottom: 1.2rem; padding-top: 1rem; }
+  .t-author { font-size: 0.78rem; color: var(--gold); font-weight: 600; letter-spacing: 0.08em; }
+  .t-role { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+  .stars { color: var(--gold); font-size: 0.8rem; margin-bottom: 0.8rem; }
+
+  /* PRICING */
+  #pricing {
+    padding: 7rem 2rem; position: relative;
+    background: linear-gradient(180deg, var(--dark), var(--black));
+  }
+
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+    max-width: 1100px; margin: 0 auto;
+  }
+
+  .pricing-card {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 2.5rem; position: relative; overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .pricing-card:hover { transform: translateY(-4px); }
+  .pricing-card.featured { border-color: var(--gold); }
+  .pricing-card.featured::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .pricing-badge {
+    position: absolute; top: 1.2rem; right: 1.2rem;
+    background: var(--gold); color: var(--black);
+    padding: 0.25rem 0.7rem; font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .pricing-plan { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 0.8rem; }
+  .pricing-name { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--white); font-weight: 300; margin-bottom: 0.5rem; }
+  .pricing-price {
+    display: flex; align-items: baseline; gap: 0.4rem; margin: 1.5rem 0;
+  }
+  .p-amount { font-family: 'Cormorant Garamond', serif; font-size: 3.5rem; color: var(--gold); font-weight: 300; }
+  .p-period { font-size: 0.8rem; color: var(--muted); }
+  .pricing-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 2rem; }
+  .pricing-list { list-style: none; margin-bottom: 2rem; }
+  .pricing-list li {
+    display: flex; align-items: flex-start; gap: 0.7rem;
+    font-size: 0.87rem; color: var(--text); padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pricing-list li:last-child { border: none; }
+  .pricing-list .check { flex-shrink: 0; margin-top: 2px; }
+
+  .btn-outline {
+    width: 100%; padding: 1rem; background: transparent;
+    border: 1px solid var(--gold); color: var(--gold);
+    font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-outline:hover { background: var(--gold); color: var(--black); }
+  .btn-filled {
+    width: 100%; padding: 1rem;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border: none; color: var(--black);
+    font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: filter 0.2s, transform 0.2s;
+  }
+  .btn-filled:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+  /* ABOUT / HOW IT WORKS */
+  #how {
+    padding: 7rem 2rem; background: var(--dark);
+    border-top: 1px solid var(--border);
+  }
+  .steps {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0; max-width: 1000px; margin: 0 auto; position: relative;
+  }
+  .steps::before {
+    content: ''; position: absolute; top: 2.5rem; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent);
+    z-index: 0;
+  }
+  .step { text-align: center; padding: 2rem 1.5rem; position: relative; z-index: 1; }
+  .step-num {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--card); border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--gold);
+    margin: 0 auto 1.2rem; font-weight: 300;
+  }
+  .step-title { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.6rem; }
+  .step-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9); z-index: 1000;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(10px);
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--gold);
+    padding: 3rem; max-width: 500px; width: 90%; position: relative;
+    animation: fadeUp 0.4s ease;
+  }
+  .modal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1.2rem;
+    background: none; border: none; color: var(--muted); font-size: 1.5rem;
+    cursor: pointer; transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--gold); }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300;
+    color: var(--white); margin-bottom: 0.5rem;
+  }
+  .modal-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 2rem; line-height: 1.6; }
+  .modal-form { display: flex; flex-direction: column; gap: 1rem; }
+  .modal-form input {
+    background: var(--dark); border: 1px solid var(--border);
+    color: var(--white); padding: 0.9rem 1rem;
+    font-family: 'Syne', sans-serif; font-size: 0.9rem; outline: none;
+    transition: border-color 0.2s; width: 100%;
+  }
+  .modal-form input:focus { border-color: var(--gold); }
+  .modal-form input::placeholder { color: var(--muted); }
+
+  /* SUCCESS STATE */
+  .success-state {
+    display: none; text-align: center; padding: 2rem;
+  }
+  .success-state.active { display: block; }
+  .success-icon { font-size: 3rem; color: var(--gold); margin-bottom: 1rem; }
+  .success-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--gold); margin-bottom: 1rem; }
+
+  /* PROMPT REVEALED */
+  .prompt-revealed {
+    background: var(--dark); border: 1px solid var(--gold);
+    padding: 1.2rem; margin: 1rem 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+    color: var(--text); line-height: 1.7; position: relative;
+  }
+  .copy-btn {
+    position: absolute; top: 0.6rem; right: 0.6rem;
+    background: var(--gold); color: var(--black); border: none;
+    padding: 0.3rem 0.7rem; font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+    font-family: 'Syne', sans-serif; transition: background 0.2s;
+  }
+  .copy-btn:hover { background: var(--gold-light); }
+
+  /* FAQ */
+  #faq { padding: 6rem 2rem; }
+  .faq-list { max-width: 700px; margin: 0 auto; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-q {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 0; cursor: pointer;
+    font-size: 0.95rem; color: var(--text); font-weight: 600;
+    user-select: none; transition: color 0.2s;
+  }
+  .faq-q:hover { color: var(--gold); }
+  .faq-icon { font-size: 1.2rem; color: var(--gold); transition: transform 0.3s; flex-shrink: 0; }
+  .faq-a {
+    max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s;
+    font-size: 0.88rem; color: var(--muted); line-height: 1.8;
+  }
+  .faq-item.open .faq-a { max-height: 200px; padding-bottom: 1.5rem; }
+  .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); padding: 3rem 2rem;
+    text-align: center; background: var(--dark);
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.8rem;
+    color: var(--gold); font-weight: 300; margin-bottom: 1rem;
+  }
+  .footer-links { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+  .footer-links a { color: var(--muted); font-size: 0.8rem; text-decoration: none; letter-spacing: 0.08em; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--gold); }
+  .footer-copy { font-size: 0.75rem; color: var(--muted); }
+  .footer-copy span { color: var(--gold); }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* FLOATING CTA */
+  .float-cta {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 90;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--black); padding: 0.9rem 1.8rem;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem;
+    letter-spacing: 0.1em; text-transform: uppercase; border: none; cursor: pointer;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    box-shadow: 0 8px 30px rgba(201,168,76,0.3);
+    animation: float 3s ease-in-out infinite;
+    transition: filter 0.2s;
+  }
+  .float-cta:hover { filter: brightness(1.1); }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+  /* SCROLL INDICATOR */
+  .scroll-ind {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    font-size: 0.65rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;
+    animation: fadeUp 1s ease 1s both;
+  }
+  .scroll-line { width: 1px; height: 40px; background: linear-gradient(180deg, var(--gold-dim), transparent); animation: scrollAnim 2s ease-in-out infinite; }
+  @keyframes scrollAnim { 0%{transform:scaleY(0);transform-origin:top} 50%{transform:scaleY(1);transform-origin:top} 51%{transform:scaleY(1);transform-origin:bottom} 100%{transform:scaleY(0);transform-origin:bottom} }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.2rem; }
+    .nav-links { display: none; }
+    .pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .steps::before { display: none; }
+    .proof-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .funnel-box { padding: 2rem 1.5rem; }
+    .float-cta { bottom: 1rem; right: 1rem; font-size: 0.75rem; padding: 0.75rem 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Prompt<span>Vision</span> Pro</div>
+  <ul class="nav-links">
+    <li><a href="#prompts">Prompts</a></li>
+    <li><a href="#pricing">Tarifs</a></li>
+    <li><a href="#how">Comment ça marche</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="#tunnel" class="nav-cta">Commencer — 9€</a>
+</nav>
+
+<!-- FLOATING CTA -->
+<button class="float-cta" onclick="checkout('pack')">🔥 Obtenir le pack — 9€</button>
+
+<!-- TUNNEL / HERO -->
+<section id="tunnel">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+
+  <div class="tunnel-content">
+    <div class="badge">Pack Prompts IA — Édition Pro 2025</div>
+
+    <h1 class="hero-title">
+      Des images <em>professionnelles</em><br>
+      en <strong>30 secondes</strong> chrono
+    </h1>
+    <p class="hero-sub">
+      Arrête de perdre des heures à tester des prompts qui ne donnent rien.
+      50 prompts testés, validés, compatibles avec toutes les IA de génération d'images.
+    </p>
+
+    <div class="urgency-bar">
+      <div class="urgency-dot"></div>
+      <p class="urgency-text">
+        <strong id="salesCount">87</strong> ventes — Le prix passe à <strong>27€</strong> après 100 ventes
+      </p>
+    </div>
+
+    <div class="funnel-box">
+      <div class="funnel-price">
+        <span class="price-old">27€</span>
+        <span class="price-new">9€</span>
+        <span class="price-unit">accès à vie</span>
+      </div>
+
+      <ul class="funnel-features">
+        <li><span class="check">✦</span> 50 prompts testés et validés</li>
+        <li><span class="check">✦</span> 1 prompt par style d'image</li>
+        <li><span class="check">✦</span> Compatible Midjourney, DALL·E, Stable Diffusion, Flux…</li>
+        <li><span class="check">✦</span> Résultats immédiats — reçu par mail</li>
+        <li><span class="check">✦</span> Mises à jour offertes</li>
+      </ul>
+
+      <div class="funnel-form">
+        <input type="text" id="heroName" placeholder="Ton prénom" autocomplete="given-name">
+        <input type="email" id="heroEmail" placeholder="Ton adresse email" autocomplete="email">
+        <button class="btn-primary" onclick="handleFunnelSubmit()">
+          Obtenir mes 50 prompts maintenant →
+        </button>
+      </div>
+
+      <div class="funnel-trust">
+        <span>🔒 Paiement sécurisé</span>
+        <span>📩 Livraison instantanée</span>
+        <span>✅ Satisfait ou remboursé</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-ind">
+    <div class="scroll-line"></div>
+    Découvrir
+  </div>
+</section>
+
+<!-- PROMPT PREVIEWS -->
+<section id="prompts" class="prompt-preview-section">
+  <div class="section-label">Aperçu du pack</div>
+  <h2 class="section-title">Ce que tu vas <em>vraiment</em> obtenir</h2>
+  <p class="section-sub">
+    Chaque prompt est associé à un style unique. Tu vois le résultat visuel,
+    tu l'utilises, tu obtiens des images pro. Simple.
+  </p>
+
+  <div class="prompt-grid">
+
+    <!-- CARD 1 -->
+    <div class="prompt-card fade-in">
+      <div class="prompt-image img-1">
+        <div class="img-placeholder">
+          <div class="img-icon">🌊</div>
+          <span>Cinematic Ocean</span>
+          <span style="font-size:0.62rem;opacity:0.5">Remplace par ton image</span>
+        </div>
+        <div class="img-label">Cinématique</div>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-style">Style #01</div>
+        <div class="prompt-name">Cinematic Ocean Drama</div>
+        <div class="prompt-text-wrap">
+          <div class="prompt-text">
+            <span class="prompt-visible">cinematic ocean storm, dramatic lighting, </span><span class="prompt-blurred">massive waves crashing against rocky cliffs at dusk, volumetric light rays, deep teal and amber tones, Nikon D850, f/2.8, 85mm, ultra-realistic, 8K HDR, award-winning photography</span>
+          </div>
+          <div class="prompt-lock">
+            <button class="lock-btn" onclick="checkout('pack')">🔒 Débloquer ce prompt</button>
+          </div>
+        </div>
+        <div class="compat-tags">
+          <span class="tag">Midjourney</span>
+          <span class="tag">DALL·E</span>
+          <span class="tag">Flux</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 2 -->
+    <div class="prompt-card fade-in">
+      <div class="prompt-image img-2">
+        <div class="img-placeholder">
+          <div class="img-icon">🔥</div>
+          <span>Dark Fantasy</span>
+          <span style="font-size:0.62rem;opacity:0.5">Remplace par ton image</span>
+        </div>
+        <div class="img-label">Dark Fantasy</div>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-style">Style #07</div>
+        <div class="prompt-name">Dark Fantasy Portrait</div>
+        <div class="prompt-text-wrap">
+          <div class="prompt-text">
+            <span class="prompt-visible">dark fantasy warrior portrait, </span><span class="prompt-blurred">intricate armor with glowing runes, ominous forest background, crimson and obsidian tones, dramatic side lighting, detailed skin texture, Greg Rutkowski style, ultra-detailed, concept art, trending ArtStation</span>
+          </div>
+          <div class="prompt-lock">
+            <button class="lock-btn" onclick="checkout('pack')">🔒 Débloquer ce prompt</button>
+          </div>
+        </div>
+        <div class="compat-tags">
+          <span class="tag">Midjourney</span>
+          <span class="tag">Stable Diffusion</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 3 -->
+    <div class="prompt-card fade-in">
+      <div class="prompt-image img-3">
+        <div class="img-placeholder">
+          <div class="img-icon">🌆</div>
+          <span>Cyberpunk City</span>
+          <span style="font-size:0.62rem;opacity:0.5">Remplace par ton image</span>
+        </div>
+        <div class="img-label">Cyberpunk</div>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-style">Style #14</div>
+        <div class="prompt-name">Neon Cyberpunk Cityscape</div>
+        <div class="prompt-text-wrap">
+          <div class="prompt-text">
+            <span class="prompt-visible">cyberpunk megacity at night, </span><span class="prompt-blurred">neon reflections on wet asphalt, holographic billboards in Japanese and Chinese, flying vehicles, dense urban layers, purple and cyan color grading, anamorphic lens flare, Blade Runner 2049 aesthetic, 4K concept art</span>
+          </div>
+          <div class="prompt-lock">
+            <button class="lock-btn" onclick="checkout('pack')">🔒 Débloquer ce prompt</button>
+          </div>
+        </div>
+        <div class="compat-tags">
+          <span class="tag">Midjourney</span>
+          <span class="tag">DALL·E</span>
+          <span class="tag">Ideogram</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 4 -->
+    <div class="prompt-card fade-in">
+      <div class="prompt-image img-4">
+        <div class="img-placeholder">
+          <div class="img-icon">🌿</div>
+          <span>Botanical Macro</span>
+          <span style="font-size:0.62rem;opacity:0.5">Remplace par ton image</span>
+        </div>
+        <div class="img-label">Nature</div>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-style">Style #22</div>
+        <div class="prompt-name">Macro Botanical Art</div>
+        <div class="prompt-text-wrap">
+          <div class="prompt-text">
+            <span class="prompt-visible">macro photography botanical, </span><span class="prompt-blurred">morning dew droplets on exotic flower petals, shallow depth of field, pastel green and peach tones, studio lighting, ultra-sharp details, National Geographic quality, Canon 100mm macro, 8K resolution</span>
+          </div>
+          <div class="prompt-lock">
+            <button class="lock-btn" onclick="checkout('pack')">🔒 Débloquer ce prompt</button>
+          </div>
+        </div>
+        <div class="compat-tags">
+          <span class="tag">Flux</span>
+          <span class="tag">DALL·E</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 5 -->
+    <div class="prompt-card fade-in">
+      <div class="prompt-image img-5">
+        <div class="img-placeholder">
+          <div class="img-icon">🏛️</div>
+          <span>Art Deco Interior</span>
+          <span style="font-size:0.62rem;opacity:0.5">Remplace par ton image</span>
+        </div>
+        <div class="img-label">Architecture</div>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-style">Style #31</div>
+        <div class="prompt-name">Art Deco Grand Interior</div>
+        <div class="prompt-text-wrap">
+          <div class="prompt-text">
+            <span class="prompt-visible">art deco grand hotel lobby, </span><span class="prompt-blurred">towering gilded columns, geometric marble floors, warm amber chandelier light, symmetrical composition, 1930s opulence, wide-angle architectural photography, 35mm lens, ultra-realistic rendering, high contrast</span>
+          </div>
+          <div class="prompt-lock">
+            <button class="lock-btn" onclick="checkout('pack')">🔒 Débloquer ce prompt</button>
+          </div>
+        </div>
+        <div class="compat-tags">
+          <span class="tag">Midjourney</span>
+          <span class="tag">Stable Diffusion</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 6 -->
+    <div class="prompt-card fade-in">
+      <div class="prompt-image img-6">
+        <div class="img-placeholder">
+          <div class="img-icon">✨</div>
+          <span>Abstract Portrait</span>
+          <span style="font-size:0.62rem;opacity:0.5">Remplace par ton image</span>
+        </div>
+        <div class="img-label">Abstrait</div>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-style">Style #44</div>
+        <div class="prompt-name">Abstract Liquid Portrait</div>
+        <div class="prompt-text-wrap">
+          <div class="prompt-text">
+            <span class="prompt-visible">abstract liquid portrait, </span><span class="prompt-blurred">face dissolving into flowing iridescent paint, fluid dynamics simulation, magenta and cyan chromatic aberration, editorial fashion magazine aesthetic, studio white background, ultra-detailed digital art, 16K resolution</span>
+          </div>
+          <div class="prompt-lock">
+            <button class="lock-btn" onclick="checkout('pack')">🔒 Débloquer ce prompt</button>
+          </div>
+        </div>
+        <div class="compat-tags">
+          <span class="tag">DALL·E</span>
+          <span class="tag">Ideogram</span>
+          <span class="tag">Flux</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<section class="proof-section fade-in">
+  <div class="section-label">Ils ont testé</div>
+  <h2 class="section-title" style="margin-bottom:3rem">Les <em>résultats</em> parlent</h2>
+
+  <div class="proof-grid">
+    <div class="proof-stat">
+      <div class="number">50+</div>
+      <div class="label">Prompts inclus</div>
+    </div>
+    <div class="proof-stat">
+      <div class="number">87</div>
+      <div class="label">Clients satisfaits</div>
+    </div>
+    <div class="proof-stat">
+      <div class="number">4.9★</div>
+      <div class="label">Note moyenne</div>
+    </div>
+  </div>
+
+  <div class="testimonials">
+    <div class="testimonial">
+      <div class="stars">★★★★★</div>
+      <p class="t-text">Je passais des heures sur Midjourney sans résultats convaincants. Maintenant j'obtiens des images dignes d'un studio pro en quelques clics. Franchement bluffant pour 9€.</p>
+      <div class="t-author">@lucas_design</div>
+      <div class="t-role">Graphiste freelance, Lyon</div>
+    </div>
+    <div class="testimonial">
+      <div class="stars">★★★★★</div>
+      <p class="t-text">Le rapport qualité/prix est insensé. J'ai testé les 50 prompts ce week-end — chaque style est distinct, les résultats sont cohérents et reproductibles. Exactement ce qu'il me fallait.</p>
+      <div class="t-author">@sarah.creates</div>
+      <div class="t-role">Créatrice de contenu</div>
+    </div>
+    <div class="testimonial">
+      <div class="stars">★★★★★</div>
+      <p class="t-text">J'ai pris l'abonnement premium directement. Recevoir 50 nouveaux prompts chaque mois orientés sur les dernières IA image, c'est exactement le genre d'avantage concurrentiel que je cherchais.</p>
+      <div class="t-author">@marc_visuel</div>
+      <div class="t-role">Directeur artistique</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-label">Nos offres</div>
+  <h2 class="section-title">Choisir ton <em>niveau</em></h2>
+  <p class="section-sub">
+    Accès ponctuel ou abonnement premium — tu es toujours à la pointe des meilleures IA de génération d'images.
+  </p>
+
+  <div class="pricing-grid">
+
+    <!-- PACK UNIQUE -->
+    <div class="pricing-card fade-in">
+      <div class="pricing-plan">Accès unique</div>
+      <div class="pricing-name">Pack Essentiel</div>
+      <div class="pricing-price">
+        <span class="p-amount">9€</span>
+        <span class="p-period">paiement unique</span>
+      </div>
+      <div class="pricing-desc">Parfait pour démarrer. 50 prompts premium livrés immédiatement dans ta boîte mail.</div>
+      <ul class="pricing-list">
+        <li><span class="check">✦</span> 50 prompts testés et validés</li>
+        <li><span class="check">✦</span> 1 prompt par style unique</li>
+        <li><span class="check">✦</span> Midjourney, DALL·E, Stable Diffusion, Flux, Ideogram</li>
+        <li><span class="check">✦</span> Livraison par email instantanée</li>
+        <li><span class="check">✦</span> Accès à vie au pack</li>
+      </ul>
+      <button class="btn-outline" onclick="checkout('pack')">Obtenir le pack — 9€</button>
+    </div>
+
+    <!-- STANDARD MENSUEL -->
+    <div class="pricing-card fade-in">
+      <div class="pricing-plan">Abonnement mensuel</div>
+      <div class="pricing-name">Standard</div>
+      <div class="pricing-price">
+        <span class="p-amount">29€</span>
+        <span class="p-period">/mois</span>
+      </div>
+      <div class="pricing-desc">Pour les créateurs réguliers. 50 nouveaux prompts chaque mois, toujours à jour avec les IA qui performent.</div>
+      <ul class="pricing-list">
+        <li><span class="check">✦</span> 50 prompts NOUVEAUX chaque mois</li>
+        <li><span class="check">✦</span> 100% génération d'images</li>
+        <li><span class="check">✦</span> Midjourney, DALL·E, Flux, Ideogram…</li>
+        <li><span class="check">✦</span> Livraison par email le 1er du mois</li>
+        <li><span class="check">✦</span> Accès à l'archive des mois précédents</li>
+        <li><span class="check">✦</span> Résiliable à tout moment</li>
+      </ul>
+      <button class="btn-outline" onclick="checkout('standard')">Démarrer — 29€/mois</button>
+    </div>
+
+    <!-- PREMIUM ANNUEL -->
+    <div class="pricing-card featured fade-in">
+      <div class="pricing-badge">⚡ ÉLITE</div>
+      <div class="pricing-plan">Abonnement annuel</div>
+      <div class="pricing-name">PromptVision Elite</div>
+      <div class="pricing-price">
+        <span class="p-amount">299€</span>
+        <span class="p-period">/an</span>
+      </div>
+      <div class="pricing-desc">Pour ceux qui veulent une longueur d'avance. Un arsenal complet, une veille exclusive, et des outils que personne d'autre ne te donne.</div>
+      <ul class="pricing-list">
+        <li><span class="check">✦</span> 50 prompts premium/mois <span style="color:var(--gold);font-size:0.72rem">(600/an)</span></li>
+        <li><span class="check">✦</span> Prompts ciblés IA émergentes avant tout le monde</li>
+        <li><span class="check">✦</span> Accès archive complète dès le 1er jour</li>
+        <li><span class="check">✦</span> Résiliable à tout moment</li>
+        <li style="border-top:1px solid var(--gold-dim);padding-top:0.8rem;margin-top:0.4rem">
+          <span style="color:var(--gold);font-size:0.85rem;font-weight:700">✦</span>
+          <span><strong style="color:var(--white)">Fiches de paramétrage IA</strong> — pour chaque prompt, les réglages exacts (cfg, steps, sampler) pour un résultat optimal sur chaque IA</span>
+        </li>
+        <li>
+          <span style="color:var(--gold);font-size:0.85rem;font-weight:700">✦</span>
+          <span><strong style="color:var(--white)">Rapport mensuel "IA du mois"</strong> — analyse des générateurs qui explosent, ceux à éviter, et les styles tendance du moment</span>
+        </li>
+        <li>
+          <span style="color:var(--gold);font-size:0.85rem;font-weight:700">✦</span>
+          <span><strong style="color:var(--white)">Prompt Builder exclusif</strong> — accès à ton outil en ligne pour composer tes propres prompts en combinant nos modules validés</span>
+        </li>
+      </ul>
+      <button class="btn-filled" onclick="checkout('elite')">Rejoindre Elite — 299€/an →</button>
+      <p style="text-align:center;font-size:0.72rem;color:var(--muted);margin-top:0.8rem">Soit 24,90€/mois — <span style="color:var(--gold)">économise 50% vs Standard</span></p>
+    </div>
+
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">Processus</div>
+  <h2 class="section-title" style="margin-bottom:1rem">Comment ça <em>marche</em></h2>
+  <p class="section-sub">En 4 étapes, du paiement à l'image pro.</p>
+
+  <div class="steps">
+    <div class="step fade-in">
+      <div class="step-num">1</div>
+      <div class="step-title">Tu choisis ton offre</div>
+      <div class="step-desc">Pack unique à 9€ ou abonnement premium mensuel.</div>
+    </div>
+    <div class="step fade-in">
+      <div class="step-num">2</div>
+      <div class="step-title">Tu laisses ton email</div>
+      <div class="step-desc">Paiement sécurisé, tes prompts arrivent dans la foulée.</div>
+    </div>
+    <div class="step fade-in">
+      <div class="step-num">3</div>
+      <div class="step-title">Tu reçois tout</div>
+      <div class="step-desc">50 prompts complets, par mail, prêts à copier-coller.</div>
+    </div>
+    <div class="step fade-in">
+      <div class="step-num">4</div>
+      <div class="step-title">Tu génères</div>
+      <div class="step-desc">Colle le prompt dans ton IA préférée. Résultat pro immédiat.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-label">Questions fréquentes</div>
+  <h2 class="section-title" style="margin-bottom:3rem">FAQ</h2>
+
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Avec quelle IA est-ce compatible ?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Tous nos prompts sont testés sur Midjourney, DALL·E 3, Stable Diffusion, Flux, et Ideogram. Ils sont formulés pour être adaptables à n'importe quel générateur d'images IA du marché.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Comment je reçois mes prompts après l'achat ?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Dès la confirmation, tu reçois un email avec ton pack complet. Les 50 prompts sont disponibles immédiatement, formatés et prêts à l'emploi. Pas d'attente, pas de téléchargement compliqué.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Que contient l'abonnement Premium à 299€ ?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Chaque mois, tu reçois 50 nouveaux prompts orientés exclusivement sur la génération d'images. La sélection est mise à jour en fonction des IA les plus performantes du moment. Résiliable à tout moment sans engagement.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Et si je ne suis pas satisfait ?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Satisfait ou remboursé sous 7 jours pour le pack à 9€. Pour l'abonnement premium, tu peux résilier avant le prochain renouvellement sans frais.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Est-ce que le prix va vraiment augmenter ?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Oui. Le pack passe à 27€ dès la 100e vente. Le compteur est réel et se met à jour en temps réel. Tant que tu vois 9€, profites-en.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PromptVision Pro</div>
+  <div class="footer-links">
+    <a href="#">Accueil</a>
+    <a href="#prompts">Aperçu</a>
+    <a href="#pricing">Tarifs</a>
+    <a href="#">Mentions légales</a>
+    <a href="#">CGV</a>
+    <a href="#">Contact</a>
+  </div>
+  <div class="footer-copy">© 2025 PromptVision Pro — Tous droits réservés — Créé avec <span>✦</span> pour les créateurs visuels</div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+
+    <div id="modalContent">
+      <div class="modal-title">Accéder aux prompts</div>
+      <p class="modal-sub">Entre ton email pour recevoir ton pack complet. Tes prompts sont envoyés immédiatement après confirmation.</p>
+      <div class="modal-form">
+        <input type="text" id="modalName" placeholder="Ton prénom" autocomplete="given-name">
+        <input type="email" id="modalEmail" placeholder="Ton adresse email" autocomplete="email">
+        <button class="btn-primary" id="modalBtn" onclick="handleModalSubmit()">
+          Recevoir mes prompts — 9€ →
+        </button>
+      </div>
+    </div>
+
+    <div class="success-state" id="successState">
+      <div class="success-icon">✦</div>
+      <div class="success-title">C'est dans ta boîte mail !</div>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:1.5rem;line-height:1.6">
+        Merci ! Tes 50 prompts IA sont envoyés à l'adresse indiquée. Vérifie aussi tes spams si tu ne vois rien dans les 5 minutes.
+      </p>
+      <div class="prompt-revealed">
+        <button class="copy-btn" onclick="copyPrompt()">Copier</button>
+        ✦ BONUS — Prompt Cinematic Pro :<br><br>
+        cinematic ocean storm, dramatic lighting, massive waves crashing against rocky cliffs at dusk, volumetric light rays, deep teal and amber tones, Nikon D850, f/2.8, 85mm, ultra-realistic, 8K HDR, award-winning photography --ar 16:9 --style raw --q 2
+      </div>
+      <p style="color:var(--muted);font-size:0.78rem;margin-top:1rem">
+        Un prompt bonus débloqué ici. Les 50 autres arrivent par mail.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // BACKEND
+  const BACKEND_URL = 'https://promptvision-backend-production.up.railway.app';
+
+  // CHECKOUT STRIPE
+  async function checkout(product) {
+    let email = document.getElementById('heroEmail')?.value;
+    if (!email || !email.includes('@')) {
+      email = prompt('Entre ton adresse email pour continuer :');
+      if (!email || !email.includes('@')) return;
+    }
+    const btns = document.querySelectorAll('.btn-primary, .btn-filled, .btn-outline, .float-cta, .lock-btn');
+    btns.forEach(b => { b.disabled = true; b.style.opacity = '0.7'; });
+    try {
+      const res = await fetch(BACKEND_URL + '/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product, email })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('Pas de lien de paiement');
+      }
+    } catch (err) {
+      alert('Une erreur est survenue. Réessaie dans quelques secondes.');
+      btns.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+    }
+  }
+
+  // SUCCESS PAGE
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.location.search.includes('success=true')) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px)';
+      overlay.innerHTML = `
+        <div style="background:#141414;border:1px solid #C9A84C;padding:3rem;max-width:500px;width:90%;text-align:center;position:relative">
+          <div style="font-size:2.5rem;color:#C9A84C;margin-bottom:1rem">✦</div>
+          <div style="font-family:serif;font-size:2rem;color:#C9A84C;margin-bottom:1rem">Tes prompts sont en route !</div>
+          <p style="color:#6B6560;font-size:0.9rem;margin-bottom:1.5rem;line-height:1.6">Vérifie ta boîte mail dans les 2 minutes.</p>
+          <div style="background:#0E0E0E;border:1px solid #C9A84C;padding:1rem;font-family:monospace;font-size:0.75rem;color:#E8E4DC;text-align:left;margin-bottom:1rem;position:relative">
+            <button onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent);this.textContent='Copié!'" style="position:absolute;top:0.5rem;right:0.5rem;background:#C9A84C;color:#080808;border:none;padding:0.25rem 0.6rem;font-size:0.65rem;font-weight:700;cursor:pointer">Copier</button>
+            <span>cinematic ocean storm, dramatic lighting, massive waves crashing against rocky cliffs at dusk, volumetric light rays, deep teal and amber tones, Nikon D850, f/2.8, 85mm, ultra-realistic, 8K HDR --ar 16:9 --style raw</span>
+          </div>
+          <button onclick="checkout('elite')" style="background:linear-gradient(135deg,#C9A84C,#E8C96A);color:#080808;border:none;padding:0.8rem 1.5rem;font-weight:700;font-size:0.85rem;cursor:pointer;width:100%;margin-bottom:0.8rem">🔥 Passer à Elite — 299€/an →</button>
+          <button onclick="this.parentElement.parentElement.remove()" style="background:transparent;border:1px solid #2A2A2A;color:#6B6560;padding:0.6rem 1.5rem;font-size:0.8rem;cursor:pointer;width:100%">Fermer</button>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+    if (window.location.search.includes('canceled=true')) {
+      const notif = document.createElement('div');
+      notif.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#141414;border:1px solid #C9A84C;padding:0.8rem 1.5rem;color:#E8E4DC;font-size:0.85rem;z-index:999';
+      notif.textContent = 'Paiement annulé — tu peux réessayer quand tu veux.';
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 5000);
+    }
+  });
+
+  // CURSOR
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.left = mx - 6 + 'px'; cursor.style.top = my - 6 + 'px'; });
+  (function animRing() { rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12; ring.style.left = rx - 18 + 'px'; ring.style.top = ry - 18 + 'px'; requestAnimationFrame(animRing); })();
+
+  // SALES COUNTER
+  let sales = 87;
+  setInterval(() => {
+    if (sales < 99 && Math.random() > 0.7) {
+      sales++;
+      const el = document.getElementById('salesCount');
+      if (el) el.textContent = sales;
+    }
+  }, 8000);
+
+  // SCROLL ANIMATIONS
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // MODAL
+  let currentType = 'pack';
+  function openModal(type) {
+    currentType = type;
+    const modal = document.getElementById('modal');
+    const btn = document.getElementById('modalBtn');
+    const title = document.querySelector('.modal-title');
+    const sub = document.querySelector('.modal-sub');
+
+    document.getElementById('successState').classList.remove('active');
+    document.getElementById('modalContent').style.display = 'block';
+
+    if (type === 'standard') {
+      title.textContent = 'Abonnement Standard';
+      sub.textContent = 'Entre ton email pour démarrer ton abonnement à 29€/mois. 50 nouveaux prompts chaque mois, résiliable à tout moment.';
+      btn.textContent = 'Démarrer Standard — 29€/mois →';
+    } else if (type === 'premium') {
+      title.textContent = 'Rejoindre Elite';
+      sub.textContent = 'Entre ton email pour démarrer ton abonnement Elite à 299€/an. Accès immédiat à tout l\'arsenal — prompts, fiches de paramétrage, rapport mensuel et Prompt Builder.';
+      btn.textContent = 'Rejoindre Elite — 299€/an →';
+    } else if (type === 'prompt') {
+      title.textContent = 'Débloquer ce prompt';
+      sub.textContent = 'Ce prompt fait partie du pack complet. Entre ton email et obtiens les 50 prompts pour 9€ seulement.';
+      btn.textContent = 'Débloquer tout le pack — 9€ →';
+    } else {
+      title.textContent = 'Obtenir tes 50 prompts';
+      sub.textContent = 'Entre ton email et reçois immédiatement ton pack complet. 9€ seulement, accès à vie.';
+      btn.textContent = 'Recevoir mes prompts — 9€ →';
+    }
+    modal.classList.add('active');
+  }
+  function closeModal() { document.getElementById('modal').classList.remove('active'); }
+  function closeModalOutside(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+  function handleModalSubmit() {
+    const name = document.getElementById('modalName').value;
+    const email = document.getElementById('modalEmail').value;
+    if (!email || !email.includes('@')) { alert('Entre une adresse email valide.'); return; }
+    document.getElementById('modalContent').style.display = 'none';
+    document.getElementById('successState').classList.add('active');
+  }
+
+  function handleFunnelSubmit() {
+    const email = document.getElementById('heroEmail').value;
+    if (!email || !email.includes('@')) { alert('Entre une adresse email valide.'); return; }
+    openModal('pack');
+    setTimeout(() => {
+      document.getElementById('modalEmail').value = email;
+      const name = document.getElementById('heroName').value;
+      if (name) document.getElementById('modalName').value = name;
+    }, 100);
+  }
+
+  // COPY PROMPT
+  function copyPrompt() {
+    const text = `cinematic ocean storm, dramatic lighting, massive waves crashing against rocky cliffs at dusk, volumetric light rays, deep teal and amber tones, Nikon D850, f/2.8, 85mm, ultra-realistic, 8K HDR, award-winning photography --ar 16:9 --style raw --q 2`;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copié !';
+      setTimeout(() => btn.textContent = 'Copier', 2000);
+    });
+  }
+
+  // FAQ
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  }
+
+  // KEYBOARD ESC
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
